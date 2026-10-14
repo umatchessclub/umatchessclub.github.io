@@ -609,6 +609,22 @@ html {
 .profile-card {
   position: relative;
 }
+.profile-role-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 88px;
+  margin: 0 0 18px;
+  flex: 0 0 auto;
+}
+.profile-role-icon svg,
+.profile-role-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 .event-card .icon-badge {
   width: 46px;
   height: 46px;
