@@ -78,4 +78,73 @@ document.addEventListener("DOMContentLoaded", () => {
     updateMeetingCountdown();
     window.setInterval(updateMeetingCountdown, 60_000);
   }
+
+  const posterButtons = [...document.querySelectorAll("[data-executive-poster]")];
+  if (posterButtons.length) {
+    const dialog = document.createElement("dialog");
+    dialog.className = "poster-lightbox";
+    dialog.setAttribute("aria-label", "Executive introduction posters");
+    dialog.innerHTML = `
+      <div class="poster-lightbox-frame">
+        <button class="poster-lightbox-close" type="button" aria-label="Close poster">×</button>
+        <button class="poster-lightbox-prev" type="button" aria-label="Previous poster">‹</button>
+        <img class="poster-lightbox-image" alt="">
+        <button class="poster-lightbox-next" type="button" aria-label="Next poster">›</button>
+        <div class="poster-lightbox-caption" aria-live="polite"></div>
+        <div class="poster-lightbox-count"></div>
+      </div>`;
+    document.body.append(dialog);
+    const image = dialog.querySelector(".poster-lightbox-image");
+    const caption = dialog.querySelector(".poster-lightbox-caption");
+    const count = dialog.querySelector(".poster-lightbox-count");
+    let activeIndex = 0;
+    let activeTrigger = null;
+    let touchStartX = null;
+
+    const showPoster = (index) => {
+      activeIndex = (index + posterButtons.length) % posterButtons.length;
+      const trigger = posterButtons[activeIndex];
+      const thumbnail = trigger.querySelector("img");
+      image.src = thumbnail.currentSrc || thumbnail.src;
+      image.alt = thumbnail.alt;
+      caption.textContent = trigger.querySelector("span").textContent;
+      count.textContent = `${activeIndex + 1} of ${posterButtons.length}`;
+    };
+    const closeDialog = () => {
+      dialog.close();
+      activeTrigger?.focus();
+    };
+
+    posterButtons.forEach((button, index) => button.addEventListener("click", () => {
+      activeTrigger = button;
+      showPoster(index);
+      dialog.showModal();
+      dialog.querySelector(".poster-lightbox-close").focus();
+    }));
+    dialog.querySelector(".poster-lightbox-close").addEventListener("click", closeDialog);
+    dialog.querySelector(".poster-lightbox-prev").addEventListener("click", () => showPoster(activeIndex - 1));
+    dialog.querySelector(".poster-lightbox-next").addEventListener("click", () => showPoster(activeIndex + 1));
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) closeDialog();
+    });
+    dialog.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        showPoster(activeIndex - 1);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        showPoster(activeIndex + 1);
+      }
+    });
+    dialog.addEventListener("touchstart", (event) => {
+      touchStartX = event.changedTouches[0].clientX;
+    }, { passive: true });
+    dialog.addEventListener("touchend", (event) => {
+      if (touchStartX === null) return;
+      const distance = event.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(distance) > 50) showPoster(activeIndex + (distance < 0 ? 1 : -1));
+      touchStartX = null;
+    }, { passive: true });
+    dialog.addEventListener("close", () => activeTrigger?.focus());
+  }
 });
